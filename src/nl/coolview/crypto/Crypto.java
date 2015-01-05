@@ -2,9 +2,8 @@ package nl.coolview.crypto;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -51,24 +50,23 @@ import sun.security.x509.X509CertInfo;
 /**
  * Crypto Class
  * 
- * This class contains the most commonly used crypto functions in a single abstract class.<br />
- * <br />
- * <p>Copyright (c) Rory Slegtenhorst</p>
- * <p>Permission is hereby granted, free of charge, to any person obtaining a copy<br>
- * of this software and associated documentation files (the "Software"), to deal<br>
- * in the Software without restriction, including without limitation the rights<br>
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell<br>
- * copies of the Software, and to permit persons to whom the Software is<br>
- * furnished to do so, subject to the following conditions:<br>
- * <p>The above copyright notice and this permission notice shall be included in all<br>
- * copies or substantial portions of the Software.</p>
- * <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR<br>
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,<br>
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE<br>
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER<br>
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,<br>
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE<br>
- * SOFTWARE.</p>
+ * <p>This class contains the most commonly used crypto functions in a single abstract class.
+ * <p>Copyright (c) Rory Slegtenhorst
+ * <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * <p>The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  * 
  * @author Rory Slegtenhorst <rory.slegtenhorst@gmail.com>
  */
@@ -91,6 +89,8 @@ public abstract class Crypto {
 	private static final String ALPHABET_MODHEX = "cbdefghijklnrtuv";
 	private static final char[] CHARACTERS_MODHEX = ALPHABET_MODHEX.toCharArray();
 	
+	private static final String CHARSET_UTF8 = "UTF-8";
+	
 	public static final String OBFUSCATE = "OBF:";
 	
 	static {
@@ -99,10 +99,22 @@ public abstract class Crypto {
 		}
 	}
 	
+	/**
+	 * Compare two byte arrays
+	 * @param byte[] first
+	 * @param byte[] second
+	 * @return true if both arrays are null or if the arrays have the same length and the elements at each index in the two arrays are equal, false otherwise.
+	 */
 	public static boolean compare(byte[] first, byte[] second) {
 		return java.util.Arrays.equals(first, second);
 	}
 		
+	/**
+	 * Concatenates two byte arrays
+	 * @param byte[] first
+	 * @param byte[] second
+	 * @return The concatenated byte array
+	 */
 	public static byte[] concat(byte[] first, byte[] second) {
 		byte[] result = new byte[first.length + second.length];
 		System.arraycopy(first, 0, result, 0, first.length);
@@ -110,6 +122,11 @@ public abstract class Crypto {
 		return result;
 	}
 
+	/**
+	 * Decode Base64 data
+	 * @param String data
+	 * @return byte[] containing the decoded bytes
+	 */
 	public static byte[] d64(String data) {
 		int delta = data.endsWith("==") ? 2 : data.endsWith("=") ? 1 : 0;
 		byte[] buffer = new byte[data.length() * 3 / 4 - delta];
@@ -133,6 +150,15 @@ public abstract class Crypto {
 		return buffer;
 	}
 
+	/**
+	 * Synchronous decryption of data, defaulting to AES
+	 * @param byte[] data
+	 * @param byte[] keyData
+	 * @param [] ivData
+	 * @return Decoded bytes
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 */
 	public static synchronized byte[] dec(byte[] data, byte[] keyData, byte[] ivData) throws NoSuchAlgorithmException, NoSuchPaddingException {
 		try {
 			final Cipher mCipher = Cipher.getInstance(CipherInstance);
@@ -146,6 +172,11 @@ public abstract class Crypto {
 		return null;
 	}
 	
+	/**
+	 * Decodes a HEX string
+	 * @param String data
+	 * @return byte[] decoded
+	 */
 	public static byte[] dehex(String data) {
 		byte[] res = new byte[data.length() / 2];
 		for (int i = 0; i < res.length; i++) {
@@ -154,6 +185,11 @@ public abstract class Crypto {
 		return res;
 	}
 
+	/**
+	 * De-Obfuscate input string
+	 * @param String s
+	 * @return de-obfuscated string
+	 */
 	public static String deobf(String s) {
         if (s.startsWith(OBFUSCATE)) s = s.substring(4);
 
@@ -180,9 +216,22 @@ public abstract class Crypto {
             }
         }
 
-        return new String(b, 0, l,StandardCharsets.UTF_8);
+        try {
+			return new String(b, 0, l, CHARSET_UTF8);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
     }
 	
+	/**
+	 * Password Based Key Derivation Function
+	 * @param byte[] password
+	 * @param byte[] salt
+	 * @param Integer count
+	 * @param Integer iterations
+	 * @param String messageDigest
+	 * @return
+	 */
 	public static byte[] derive(byte[] password, byte[] salt, Integer count, Integer iterations, String messageDigest) {
 		MessageDigest md = null;
 		try {
@@ -213,14 +262,29 @@ public abstract class Crypto {
 		}
 	}
 
+	/**
+	 * Password Based Key Derivation Function, defaulting to SHA-1
+	 * @see derive
+	 */
 	public static byte[] derive(byte[] password, byte[] salt, Integer count, Integer iterations) {
 		return derive(password, salt, count, iterations, MD);
 	}
 
+	/**
+	 * Password Based Key Derivation Function, defaulting to SHA-1, using the standard settings for most use cases.
+	 * @param input
+	 * @param salt
+	 * @return
+	 */
 	public static byte[] derive(byte[] input, byte[] salt) {
 		return derive(input, salt, 1, 3);
 	}
 
+	/**
+	 * Base64 encode data
+	 * @param byte[] data
+	 * @return Base64 encoded data
+	 */
 	public static String e64(byte[] data) {
 		int size = data.length;
 		char[] ar = new char[((size + 2) / 3) * 4];
@@ -246,6 +310,15 @@ public abstract class Crypto {
 		return new String(ar);
 	}
 
+	/**
+	 * Synchronous Encryption of data
+	 * @param data
+	 * @param keyData
+	 * @param ivData
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 */
 	public static synchronized byte[] enc(byte[] data, byte[]keyData, byte[]ivData) throws NoSuchAlgorithmException, NoSuchPaddingException {
 		return enc(data, keyData, ivData, CipherInstance, CipherName);
 	}
@@ -267,6 +340,11 @@ public abstract class Crypto {
 		return null;
 	}
 
+	/**
+	 * Returns HEX encoded string of data
+	 * @param byte[] data
+	 * @return HEX encoded string
+	 */
 	public static String hex(byte[] data) {
 		char[] res = new char[2 * data.length];
 		for (int i = 0; i < data.length; ++i)
@@ -278,6 +356,15 @@ public abstract class Crypto {
 
 	}
 
+	/**
+	 * Generate self-signed CA certificate
+	 * @param keyPair
+	 * @param DN
+	 * @param first
+	 * @param days
+	 * @return
+	 * @throws Exception
+	 */
 	public static X509Certificate genca(KeyPair keyPair, String DN, Date first, long days) throws Exception {
 
 		Date last = new Date(first.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -315,6 +402,13 @@ public abstract class Crypto {
 		return cert;
 	}
 	
+	/**
+	 * Generate a certificate sign request
+	 * @param DN
+	 * @param keyPair
+	 * @return
+	 * @throws Exception
+	 */
 	public static PKCS10 gencsr(String DN, KeyPair keyPair) throws Exception {
 		PKCS10 csr = new PKCS10 (keyPair.getPublic());
 		X500Name owner = new X500Name(DN);
@@ -328,6 +422,18 @@ public abstract class Crypto {
 		return signcsr(csr, signCert, signKey, first, days, false, 0);
 	}
 	
+	/**
+	 * Sign a CSR, returning the signed certificate
+	 * @param csr
+	 * @param signCert
+	 * @param signKey
+	 * @param first
+	 * @param days
+	 * @param isCA
+	 * @param depth
+	 * @return
+	 * @throws Exception
+	 */
 	public static X509Certificate signcsr(PKCS10 csr, Certificate signCert, PrivateKey signKey, Date first, long days, boolean isCA, int depth) throws Exception {
 		Date last = new Date(first.getTime() + (days * 24 * 60 * 60 * 1000));
 		CertificateValidity period = new CertificateValidity(first, last);
@@ -417,40 +523,64 @@ public abstract class Crypto {
 		return cert;
 	}
 
-	public static byte[] gencsr(KeyPair keyPair, String DN) throws Exception {
-		PKCS10 csr = gencsr(DN, keyPair);
-		try ( ByteArrayOutputStream bs = new ByteArrayOutputStream(); PrintStream ps = new PrintStream(bs) ) {
-			csr.print(ps);
-			return bs.toByteArray(); // <-- this is it! (save to disk maybe?)
-		}
-	}
-
+	/**
+	 * Generate a keypair with a given bit-length. Please note that this method can be pretty slow.
+	 * @param keysize
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 */
 	public static KeyPair genkeypair(int keysize) throws NoSuchAlgorithmException {
 		final KeyPairGenerator keyGen = KeyPairGenerator.getInstance(PubAlgo);
         keyGen.initialize(keysize, SecureRandom.getInstance(RNG));
         return keyGen.generateKeyPair();
 	}
 	
+	/**
+	 * Increment a byte array counter by 1
+	 * @param counter
+	 */
 	public static void inc(byte[] counter) {
         for (int i = counter.length - 1; i >= 0; i--) {
             ++counter[i];
-            if (counter[i] != 0) break; //Check whether we need to loop again to carry the one.
+            if (counter[i] != 0) break; // Check whether we need to loop again to carry the one.
         }
     }
 	
+	/**
+	 * Generate HMAC of data using input key, defaults to HmacSHA1
+	 * @param key
+	 * @param data
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeyException
+	 */
 	public static byte[] mac(byte[] key, byte[] data) throws NoSuchAlgorithmException, InvalidKeyException {
 		Mac mac = Mac.getInstance(MAC);
 		mac.init(new SecretKeySpec(key, "RAW"));
 		return mac.doFinal(data);
 	}
 		
+	/**
+	 * Generate message digest of data, defaults to SHA-1
+	 * @param data
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 */
 	public static byte[] md(byte[] data) throws NoSuchAlgorithmException {
 		MessageDigest md = MessageDigest.getInstance(MD);
 		return md.digest(data);
 	}
 
+	/**
+	 * ModHEX decode string 
+	 * @param data
+	 * @return
+	 * @throws IOException
+	 */
 	public static byte[] modhex(String data) throws IOException {
-		try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
+		ByteArrayOutputStream baos = null;
+		try {
+			baos = new ByteArrayOutputStream();
 			int len = data.length();
 
 			boolean toggle = false;
@@ -473,9 +603,16 @@ public abstract class Crypto {
 				}
 			}
 			return baos.toByteArray();
+		} finally {
+			if (baos != null) baos.close();
 		}
 	}
 
+	/**
+	 * ModHEX encode data
+	 * @param data
+	 * @return
+	 */
 	public static String modhex(byte[] data) {
 		StringBuffer result = new StringBuffer();
 		for (int i = 0; i < data.length; i++) {
@@ -486,9 +623,20 @@ public abstract class Crypto {
 
 	}
 
+	/**
+	 * Obfuscate input string
+	 * @param s
+	 * @return
+	 */
 	public static String obf(String s) {
         StringBuilder buf = new StringBuilder();
-        byte[] b = s.getBytes(StandardCharsets.UTF_8);
+
+        byte[] b;
+		try {
+			b = s.getBytes(CHARSET_UTF8);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
 
         buf.append(OBFUSCATE);
         for (int i = 0; i < b.length; i++)
@@ -523,16 +671,33 @@ public abstract class Crypto {
 
     }
 	
+	/**
+	 * Generate random bytes into input array
+	 * @param bytes
+	 * @throws NoSuchAlgorithmException
+	 */
 	public static void rng(byte[] bytes) throws NoSuchAlgorithmException {
 		SecureRandom sr = SecureRandom.getInstance(RNG);
 		sr.nextBytes(bytes);
 	}
 
+	/**
+	 * Generate random int between min and max, inclusive
+	 * @param min
+	 * @param max
+	 * @return
+	 */
 	public static int random(int min, int max) {
 		Random r = new Random();
 		return r.nextInt((max - min) + 1) + min;
 	}
 
+	/**
+	 * Split a string into lines of a given length
+	 * @param in
+	 * @param max
+	 * @return
+	 */
 	public static String[] split(String in, Integer max) {
 		return in.split("(?<=\\G.{" + max + "})");
 	}
