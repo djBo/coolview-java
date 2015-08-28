@@ -67,12 +67,15 @@ public class AbstractServlet extends HttpServlet {
 		if (l < 0) l = 0;
 	    byte[] data = new byte[l];
 	    int c = 0, t = 0;
-	    try ( InputStream is = request.getInputStream(); ) {
+	    InputStream is = request.getInputStream();
+	    try {
 	    	while (t < data.length) {
 	    		t += (c = is.read(data, t, data.length - t));
 	    		if (c < 1)
 	    			throw new IOException("Cannot read more than " + t + (t == 1 ? " byte!" : " bytes!"));
 	    	}
+	    } finally {
+	    	is.close();
 	    }
 	    mContent = data;
 	    mEncoding = request.getCharacterEncoding();

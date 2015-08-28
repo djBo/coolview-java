@@ -28,7 +28,7 @@ public class JuliToLog4jHandler extends Handler {
 		return Logger.getLogger(loggerName);
 	}
 
-	public static Logger getTargetLogger(Class clazz) {
+	public static Logger getTargetLogger(Class<?> clazz) {
 		return getTargetLogger(clazz.getName());
 	}
 

@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
 
 /**
  * PropertyReader Class
- * 
+ *
  * <p>Copyright (c) Rory Slegtenhorst
  * <p>Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- * 
+ *
  * @author Rory Slegtenhorst <rory.slegtenhorst@gmail.com>
  */
 public class PropertyReader {
@@ -62,7 +62,7 @@ public class PropertyReader {
 		return props.getProperty(key);
 	}
 
-	public String getProperty(String key, Boolean required) throws IOException {
+	public String getProperty(String key, boolean required) throws IOException {
 		if (!containsKey(key) && required) {
 			throw new IOException("Property " + key + " not found");
 		}
@@ -81,7 +81,7 @@ public class PropertyReader {
 			return value;
 		}
 	}
-	
+
 	public void setProperty(String key, String value) {
 		props.setProperty(key, value);
 	}
